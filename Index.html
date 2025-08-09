@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Dutch Forge — Learn Dutch with Flashcards, Quizzes, Lion Run, Daily Tracking</title>
+<style>
+  :root {
+    --bg:#0b0e13;
+    --bg2:#0d1016;
+    --panel:#121620;
+    --edge:#1c2230;
+    --muted:#8ea0c2;
+    --text:#e8eef9;
+    --accent:#60e0b5;
+    --focus:#4aa3ff;
+    --good:#11d69c;
+    --warn:#f1b15a;
+    --bad:#ef5d7a;
+    --mag:#a782ff;
+  }
+  * { box-sizing: border-box }
+  html,body { margin:0; height:100%; background:
+    radial-gradient(1200px 800px at 80% -10%, #131b2b 0%, rgba(19,27,43,0) 60%),
+    radial-gradient(1000px 700px at -10% 120%, #1f2a40 0%, rgba(31,42,64,0) 60%),
+    linear-gradient(180deg, #0b0e13, #090c11);
+    color:var(--text); font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif }
+  header { position:sticky; top:0; z-index:10; backdrop-filter: blur(6px);
+    background:linear-gradient(180deg, rgba(10,12,18,0.92), rgba(10,12,18,0.6));
+    border-bottom:1px solid #1a2231; padding:14px 16px; display:flex; align-items:center; gap:12px }
+  h1 { margin:0; font-size:18px; letter-spacing:.3px }
+  .brand { display:flex; align-items:center; gap:10px }
+  .logo { width:22px; height:22px; border-radius:6px; background:
+    conic-gradient(from 220deg, #62e1b7, #4aa3ff, #a782ff, #62e1b7); filter:saturate(120%); }
+  nav { margin-left:auto; display:flex; gap:8px; flex-wrap:wrap }
+  nav button { background:linear-gradient(180deg,#151b28,#121620);
+    border:1px solid var(--edge); color:var(--text); padding:8px 12px; border-radius:10px; cursor:pointer; font-weight:700 }
+  nav button.active { border-color:var(--focus); box-shadow:0 0 0 2px rgba(74,163,255,0.12) inset; color:#eaf4ff }
+  main { padding:16px; max-width:1180px; margin:0 auto; display:grid; gap:16px }
+  section.panel { display:none; }
+  section.panel.active { display:block; }
+  .card { background:linear-gradient(180deg,#121726,#0f1420); border:1px solid var(--edge); border-radius:16px; padding:16px; }
+  h2 { margin:0 0 12px 0; font-size:16px; letter-spacing:.2px }
+  .muted { color:var(--muted) }
+  .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center }
+  .col { display:grid; gap:10px }
+  .grid { display:grid; gap:12px }
+  .grid.two { grid-template-columns: repeat(2, minmax(0,1fr)) }
+  .grid.three { grid-template-columns: repeat(3, minmax(0,1fr)) }
+  .pill { padding:6px 10px; border-radius:999px; background:#131a28; border:1px solid #1e2738; color:#cfe4ff; font-size:12px }
+  .btn { background:linear-gradient(180deg,#131a29,#0f1420); border:1px solid var(--edge); color:var(--text); padding:10px 14px; border-radius:10px; cursor:pointer; font-weight:700 }
+  .btn:hover { border-color:#2a3a54 }
+  .btn.good { background:rgba(17,214,156,0.08); border-color:#1e5b48; color:#caffef }
+  .btn.warn { background:rgba(241,177,90,0.08); border-color:#6b4b26; color:#ffe7c6 }
+  .btn.bad { background:rgba(239,93,122,0.08); border-color:#6b2e3b; color:#ffd3db }
+  .btn.accent { background:rgba(74,163,255,0.08); border-color:#21456c; color:#dff0ff }
+  .btn.ghost { background:transparent; }
+  .tiny { font-size:12px }
+  .mono { font-family:ui-monospace, Menlo, Consolas, monospace }
+  .sep { height:1px; background:#1a2231; margin:8px 0 12px 0 }
+
+  /* Flashcards */
+  .flash { max-width:740px; margin:auto; display:grid; gap:12px }
+  .flash-face { text-align:center; padding:34px 18px; border-radius:14px; border:1px dashed #233049; background:
+    radial-gradient(90% 90% at 50% 0%, #162238, #0e1420) }
+  .flash-word { font-size:32px; font-weight:800; letter-spacing:.4px }
+  .flash-sub { color:#9db4d9; font-size:13px; margin-top:6px }
+  .flash-actions { display:flex; gap:8px; justify-content:center; flex-wrap:wrap }
+
+  /* Quiz */
+  .qopt .btn { width:100% }
+
+  /* Lion Run (snake-like) */
+  .play-bar { display:flex; gap:10px; align-items:center; flex-wrap:wrap }
+  .canvas-wrap { position:relative; margin:auto; border-radius:14px; overflow:hidden; border:1px solid var(--edge); background:#0e131d; }
+  canvas#lionCanvas { display:block; width:100%; height:460px; background:
+    linear-gradient(180deg,#0c1220,#0b101a); image-rendering: pixelated; }
+  .overlay { position:absolute; left:0; right:0; top:0; padding:10px; display:flex; justify-content:space-between; pointer-events:none }
+  .overlay .pill { background:#0e1525; border-color:#1e2b44 }
+  .word-toast { position:absolute; left:50%; transform:translateX(-50%); bottom:10px; padding:10px 14px; border-radius:10px;
+    background:rgba(10,14,22,0.8); border:1px solid #1b2740; backdrop-filter: blur(4px); text-align:center; min-width:260px }
+  .word-toast .nl { font-weight:800; font-size:18px }
+  .word-toast .en { color:#a9bedf; font-size:12px; margin-top:4px }
+
+  /* Progress */
+  .stats { display:flex; gap:10px; flex-wrap:wrap }
+  .stat { padding:12px 12px; border-radius:12px; border:1px solid var(--edge); background:#0f1522; min-width:130px }
+  .stat .v { font-weight:800; font-size:18px }
+  .chart { height:140px; border:1px solid var(--edge); border-radius:12px; background:repeating-linear-gradient(to right,#111827,#111827 12px,#0f1624 12px,#0f1624 24px) }
+  canvas { width:100%; height:140px }
+
+  /* Deck */
+  .scroll { max-height:260px; overflow:auto; border:1px solid var(--edge); border-radius:10px; padding:8px; }
+  table { border-collapse:collapse; width:100% }
+  th, td { text-align:left; padding:6px 8px; border-bottom:1px solid #172033 }
+  th { color:#8ea0c2; font-size:12px; font-weight:600 }
+  .footer { color:#7f8798; font-size:12px; text-align:center; padding:12px }
+  @media (max-width: 860px) {
+    .grid.two { grid-template-columns: 1fr }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="logo"></div>
+    <h1>Dutch Forge</h1>
+  </div>
+  <nav>
+    <button data-tab="learn" class="active">Learn</button>
+    <button data-tab="quiz">Quiz</button>
+    <button data-tab="lion">Lion Run</button>
+    <button data-tab="progress">Progress</button>
+    <button data-tab="deck">Deck</button>
+  </nav>
+</header>
+
+<main>
+  <section id="learn" class="panel active">
+    <h2>Flashcards</h2>
+    <div class="row">
+      <div class="pill">Due today: <span id="dueCount">0</span></div>
+      <div class="pill">New: <span id="newCount">0</span></div>
+      <div class="pill">Streak: <span id="streakBadge">0</span> days</div>
+    </div>
+    <div class="sep"></div>
+    <div class="flash card">
+      <div class="flash-face" id="flashFace">
+        <div class="flash-word" id="flashWord">—</div>
+        <div class="flash-sub" id="flashSub">Press Show Answer</div>
+      </div>
+      <div class="flash-actions">
+        <button class="btn ghost" id="btnPrev">Prev</button>
+        <button class="btn accent" id="btnShow">Show Answer</button>
+        <button class="btn bad" id="btnAgain" style="display:none">Again</button>
+        <button class="btn warn" id="btnHard" style="display:none">Hard</button>
+        <button class="btn good" id="btnGood" style="display:none">Good</button>
+        <button class="btn" id="btnEasy" style="display:none">Easy</button>
+        <button class="btn ghost" id="btnNext">Next</button>
+      </div>
+      <div class="row" style="justify-content:center">
+        <span class="tiny muted">Keys: Space/Enter to show. 1/2/3/4 rate. Arrows to navigate.</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="quiz" class="panel">
+    <h2>Multiple-choice Quiz</h2>
+    <div class="row">
+      <div class="pill">Question <span id="qNum">0</span>/10</div>
+      <div class="pill">Score <span id="qScore">0</span></div>
+      <button id="qRestart" class="btn">Restart</button>
+    </div>
+    <div class="sep"></div>
+    <div class="card grid two" id="qBox">
+      <div class="flash-face">
+        <div class="flash-sub muted tiny">Translate</div>
+        <div id="qPrompt" class="flash-word">—</div>
+      </div>
+      <div class="grid two qopt" id="qChoices"></div>
+    </div>
+  </section>
+
+  <section id="lion" class="panel">
+    <h2>Lion Run — Arrow Keys</h2>
+    <div class="row play-bar">
+      <div class="pill">Foods: <span id="gFoods">0</span></div>
+      <div class="pill">Length: <span id="gLen">0</span></div>
+      <div class="pill">Words: <span id="gWords">0</span></div>
+      <button id="gStart" class="btn good">Start</button>
+      <button id="gPause" class="btn warn">Pause</button>
+      <button id="gReset" class="btn bad">Reset</button>
+    </div>
+    <div class="sep"></div>
+    <div class="card">
+      <div class="canvas-wrap" style="max-width:920px; margin:auto;">
+        <canvas id="lionCanvas" width="920" height="460"></canvas>
+        <div class="overlay">
+          <div class="pill tiny">Speed <span id="gSpeed">1</span>x</div>
+          <div class="pill tiny">Use arrow keys</div>
+        </div>
+        <div class="word-toast" id="gToast" style="display:none">
+          <div class="nl" id="wNL">—</div>
+          <div class="en" id="wEN">—</div>
+        </div>
+      </div>
+      <div class="row" style="justify-content:center; margin-top:10px">
+        <span class="tiny muted">Keys: Arrow keys move. P pauses. R resets. S repeats the word.</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="progress" class="panel">
+    <h2>Progress</h2>
+    <div class="stats">
+      <div class="stat">
+        <div class="tiny muted">Daily reviews</div>
+        <div class="v" id="pReviews">0</div>
+      </div>
+      <div class="stat">
+        <div class="tiny muted">Review accuracy</div>
+        <div class="v" id="pAccuracy">0%</div>
+      </div>
+      <div class="stat">
+        <div class="tiny muted">Quiz score</div>
+        <div class="v" id="pQuiz">0/0</div>
+      </div>
+      <div class="stat">
+        <div class="tiny muted">Lion foods</div>
+        <div class="v" id="pFoods">0</div>
+      </div>
+      <div class="stat">
+        <div class="tiny muted">Words heard</div>
+        <div class="v" id="pWords">0</div>
+      </div>
+      <div class="stat">
+        <div class="tiny muted">Streak</div>
+        <div class="v" id="pStreak">0</div>
+      </div>
+    </div>
+    <div class="sep"></div>
+    <div class="card">
+      <div class="tiny muted">Last 14 days — activity</div>
+      <div class="chart"><canvas id="pChart" width="900" height="140"></canvas></div>
+    </div>
+  </section>
+
+  <section id="deck" class="panel">
+    <h2>Deck</h2>
+    <div class="grid two">
+      <div class="card">
+        <div class="row" style="justify-content:space-between">
+          <div class="tiny muted">Cards <span id="dCount" class="pill">0</span></div>
+          <div class="row">
+            <button id="dExport" class="btn">Export JSON</button>
+          </div>
+        </div>
+        <div class="sep"></div>
+        <div class="scroll">
+          <table class="tiny mono">
+            <thead><tr><th>NL</th><th>EN</th><th>Tags</th><th></th></tr></thead>
+            <tbody id="dTable"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card col">
+        <div>
+          <div class="tiny muted">Add card</div>
+          <div class="grid two">
+            <input id="addNl" placeholder="Nederlands (nl)"/>
+            <input id="addEn" placeholder="English (en)"/>
+          </div>
+          <div class="grid two" style="margin-top:8px">
+            <input id="addPart" placeholder="Part of speech (optional)"/>
+            <input id="addTags" placeholder="tags, comma-separated"/>
+          </div>
+          <div class="row" style="margin-top:8px">
+            <button id="dAdd" class="btn good">Add</button>
+            <span id="dAddMsg" class="tiny muted"></span>
+          </div>
+        </div>
+        <div>
+          <div class="tiny muted">Import JSON</div>
+          <textarea id="dImport" placeholder='[{"nl":"hallo","en":"hello"}]' style="min-height:110px; width:100%; background:#0c1320; color:#e8eef9; border:1px solid var(--edge); border-radius:10px; padding:10px"></textarea>
+          <div class="row" style="margin-top:8px">
+            <button id="dImportBtn" class="btn">Import</button>
+            <button id="dReset" class="btn bad">Reset Progress</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer tiny">All data is stored locally in your browser. No server.</div>
+  </section>
+</main>
+
+<script>
+/* ---------- Storage ---------- */
+const KEY = {
+  DECK: 'df.deck.v1',
+  SRS: 'df.srs.v1',
+  PROG: 'df.progress.v1',
+  META: 'df.meta.v1'
+};
+const todayStr = () => { const d = new Date(); d.setHours(0,0,0,0); return d.toISOString().slice(0,10); };
+const addDays = (dateStr, n) => { const d = new Date(dateStr); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); };
+const clamp = (v,min,max)=>Math.max(min,Math.min(max,v));
+const load = (k, def) => { try { const v = JSON.parse(localStorage.getItem(k)); return v ?? structuredClone(def); } catch { return structuredClone(def); } };
+const save = (k,v) => localStorage.setItem(k, JSON.stringify(v));
+
+/* ---------- Seed Deck ---------- */
+const seedDeck = [
+  {nl:"hallo", en:"hello", part:"int", tags:["greet"]},
+  {nl:"dag", en:"hi/bye", part:"int", tags:["greet"]},
+  {nl:"alsjeblieft", en:"please (informal)", part:"adv", tags:["polite"]},
+  {nl:"alstublieft", en:"please (formal)", part:"adv", tags:["polite"]},
+  {nl:"dank je", en:"thank you (informal)", part:"phr", tags:["polite"]},
+  {nl:"dank u", en:"thank you (formal)", part:"phr", tags:["polite"]},
+  {nl:"ja", en:"yes", part:"adv"},
+  {nl:"nee", en:"no", part:"adv"},
+  {nl:"goedemorgen", en:"good morning", part:"phr", tags:["greet"]},
+  {nl:"goedenavond", en:"good evening", part:"phr", tags:["greet"]},
+  {nl:"tot ziens", en:"see you", part:"phr", tags:["greet"]},
+  {nl:"ik", en:"I", part:"pron"},
+  {nl:"jij/je", en:"you (singular)", part:"pron"},
+  {nl:"u", en:"you (formal)", part:"pron"},
+  {nl:"hij", en:"he", part:"pron"},
+  {nl:"zij/ze", en:"she/they", part:"pron"},
+  {nl:"wij/we", en:"we", part:"pron"},
+  {nl:"het", en:"it/the (neuter)", part:"pron"},
+  {nl:"een", en:"a/an", part:"art"},
+  {nl:"de", en:"the (common)", part:"art"},
+  {nl:"huis", en:"house", part:"n"},
+  {nl:"man", en:"man", part:"n"},
+  {nl:"vrouw", en:"woman", part:"n"},
+  {nl:"water", en:"water", part:"n"},
+  {nl:"brood", en:"bread", part:"n"},
+  {nl:"melk", en:"milk", part:"n"},
+  {nl:"eten", en:"to eat", part:"v"},
+  {nl:"drinken", en:"to drink", part:"v"},
+  {nl:"spreken", en:"to speak", part:"v"},
+  {nl:"leren", en:"to learn", part:"v"},
+  {nl:"hoe gaat het?", en:"how are you?", part:"phr"},
+  {nl:"het gaat goed", en:"I am fine", part:"phr"},
+  {nl:"waar is ...?", en:"where is ...?", part:"phr"},
+  {nl:"ik begrijp het niet", en:"I don't understand", part:"phr"},
+  {nl:"kunt u mij helpen?", en:"can you help me?", part:"phr"},
+  {nl:"links", en:"left", part:"adv"},
+  {nl:"rechts", en:"right", part:"adv"},
+  {nl:"hier", en:"here", part:"adv"},
+  {nl:"daar", en:"there", part:"adv"},
+];
+
+/* ---------- State ---------- */
+let DECK = load(KEY.DECK, seedDeck.map((c,i)=>({id:i+1, ...c})));
+let SRS = load(KEY.SRS, {}); // id -> { ease, interval, due, reps, lapses, seen }
+let PROG = load(KEY.PROG, { days:{}, last:"", streak:0 });
+let META = load(KEY.META, { nextId: (DECK.reduce((m,c)=>Math.max(m,c.id),0) + 1) });
+const ensureSrs = (id) => { if (!SRS[id]) SRS[id] = { ease:250, interval:0, due:"1970-01-01", reps:0, lapses:0, seen:false }; return SRS[id]; };
+DECK.forEach(c=>ensureSrs(c.id));
+
+/* ---------- Tabs ---------- */
+document.querySelectorAll('nav button').forEach(b=>{
+  b.onclick = () => {
+    document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('section.panel').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    document.getElementById(b.dataset.tab).classList.add('active');
+    onTab(b.dataset.tab);
+  };
+});
+
+/* ---------- Progress helpers ---------- */
+function markActivity(kind, payload={}) {
+  const day = todayStr();
+  if (!PROG.days[day]) PROG.days[day] = { reviews:0, correct:0, quizC:0, quizT:0, foods:0, words:0 };
+  if (kind === 'review') {
+    PROG.days[day].reviews += (payload.n ?? 1);
+    PROG.days[day].correct += (payload.good ?? 0);
+  } else if (kind === 'quiz') {
+    PROG.days[day].quizC += (payload.c ?? 0);
+    PROG.days[day].quizT += (payload.t ?? 0);
+  } else if (kind === 'lion') {
+    PROG.days[day].foods += (payload.foods ?? 0);
+    PROG.days[day].words += (payload.words ?? 0);
+  }
+  const last = PROG.last;
+  const today = day;
+  if (last !== today) {
+    const y = addDays(today, -1);
+    PROG.streak = (last === y) ? (PROG.streak + 1) : 1;
+    PROG.last = today;
+  }
+  save(KEY.PROG, PROG);
+}
+
+/* ---------- SRS ---------- */
+function schedule(card, rating) {
+  const s = ensureSrs(card.id);
+  const today = todayStr();
+  s.seen = true;
+  s.reps += 1;
+  if (rating === 'again') {
+    s.ease = clamp(s.ease - 30, 130, 350);
+    s.interval = 0;
+    s.due = today;
+    s.lapses += 1;
+  } else if (rating === 'hard') {
+    s.ease = clamp(s.ease - 15, 130, 350);
+    s.interval = Math.max(1, s.interval ? Math.round(s.interval * 1.2) : 1);
+    s.due = addDays(today, s.interval);
+  } else if (rating === 'good') {
+    s.interval = s.interval ? Math.max(1, Math.round(s.interval * (s.ease/100))) : 1;
+    s.due = addDays(today, s.interval);
+  } else if (rating === 'easy') {
+    s.ease = clamp(s.ease + 15, 130, 400);
+    s.interval = s.interval ? Math.max(2, Math.round(s.interval * (s.ease/100 + 0.5))) : 3;
+    s.due = addDays(today, s.interval);
+  }
+  SRS[card.id] = s;
+  save(KEY.SRS, SRS);
+}
+
+/* ---------- Learn UI ---------- */
+let learnQueue = [];
+let learnIndex = 0;
+let showingAnswer = false;
+let lastShown = [];
+
+function dueCounts() {
+  const t = todayStr();
+  let due = 0, news = 0;
+  for (const c of DECK) {
+    const s = ensureSrs(c.id);
+    if (!s.seen) news++;
+    if (s.due <= t) due++;
+  }
+  return {due, news};
+}
+function buildLearnQueue() {
+  const t = todayStr();
+  const due = DECK.filter(c => ensureSrs(c.id).due <= t);
+  const unseen = DECK.filter(c => !ensureSrs(c.id).seen);
+  const randomFallback = DECK.slice().sort(()=>Math.random()-0.5).slice(0, Math.min(10, DECK.length));
+  const mix = [...due, ...unseen, ...randomFallback];
+  const seen = new Set();
+  learnQueue = mix.filter(c=> { if (seen.has(c.id)) return false; seen.add(c.id); return true; }).slice(0, 60);
+  learnIndex = 0;
+  updateDueBadges();
+}
+function updateDueBadges() {
+  const {due, news} = dueCounts();
+  document.getElementById('dueCount').textContent = String(due);
+  document.getElementById('newCount').textContent = String(news);
+  document.getElementById('streakBadge').textContent = String(PROG.streak || 0);
+}
+function showCurrentCard() {
+  if (learnQueue.length === 0) buildLearnQueue();
+  const card = learnQueue[learnIndex % learnQueue.length];
+  const s = ensureSrs(card.id);
+  const front = Math.random() < 0.5;
+  const prompt = front ? card.nl : card.en;
+  const answer = front ? card.en : card.nl;
+  const word = document.getElementById('flashWord');
+  const subEl = document.getElementById('flashSub');
+  const face = document.getElementById('flashFace');
+  word.textContent = prompt;
+  subEl.textContent = s.seen ? `due: ${s.due} • ease: ${s.ease} • intv: ${s.interval}d` : 'new';
+  face.dataset.answer = answer;
+  face.dataset.cardId = card.id;
+  showingAnswer = false;
+  document.getElementById('btnShow').style.display = 'inline-block';
+  ['btnAgain','btnHard','btnGood','btnEasy'].forEach(id=>document.getElementById(id).style.display='none');
+}
+function revealAnswer() {
+  const face = document.getElementById('flashFace');
+  const word = document.getElementById('flashWord');
+  const subEl = document.getElementById('flashSub');
+  word.textContent = face.dataset.answer || '—';
+  subEl.textContent = 'Rate your recall';
+  showingAnswer = true;
+  document.getElementById('btnShow').style.display = 'none';
+  ['btnAgain','btnHard','btnGood','btnEasy'].forEach(id=>document.getElementById(id).style.display='inline-block');
+}
+function rateCurrent(rating) {
+  const face = document.getElementById('flashFace');
+  const id = Number(face.dataset.cardId);
+  const card = DECK.find(c=>c.id===id);
+  schedule(card, rating);
+  const good = (rating === 'good' || rating === 'easy') ? 1 : 0;
+  markActivity('review', { n:1, good });
+  updateDueBadges();
+  lastShown.unshift(card.id);
+  lastShown = Array.from(new Set(lastShown)).slice(0, 5);
+  nextCard();
+}
+function nextCard() {
+  learnIndex = (learnIndex + 1) % learnQueue.length;
+  for (let i=0;i<learnQueue.length;i++) {
+    const idx = (learnIndex + i) % learnQueue.length;
+    const candidate = learnQueue[idx];
+    if (!lastShown.includes(candidate.id)) { learnIndex = idx; break; }
+  }
+  showCurrentCard();
+}
+function prevCard() {
+  learnIndex = (learnIndex - 1 + learnQueue.length) % learnQueue.length;
+  showCurrentCard();
+}
+document.getElementById('btnShow').onclick = revealAnswer;
+document.getElementById('btnAgain').onclick = ()=>rateCurrent('again');
+document.getElementById('btnHard').onclick = ()=>rateCurrent('hard');
+document.getElementById('btnGood').onclick = ()=>rateCurrent('good');
+document.getElementById('btnEasy').onclick = ()=>rateCurrent('easy');
+document.getElementById('btnNext').onclick = nextCard;
+document.getElementById('btnPrev').onclick = prevCard;
+document.addEventListener('keydown', (e)=>{
+  if (document.getElementById('learn').classList.contains('active')) {
+    if (!showingAnswer && (e.key===' ' || e.key==='Enter')) { e.preventDefault(); revealAnswer(); }
+    if (showingAnswer) {
+      if (e.key==='1') rateCurrent('again');
+      if (e.key==='2') rateCurrent('hard');
+      if (e.key==='3') rateCurrent('good');
+      if (e.key==='4') rateCurrent('easy');
+    }
+    if (e.key==='ArrowRight') nextCard();
+    if (e.key==='ArrowLeft') prevCard();
+  }
+});
+
+/* ---------- Quiz ---------- */
+let qState = { n:0, score:0, items:[] };
+function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a; }
+function makeQuizSet() {
+  const pool = DECK.slice();
+  if (pool.length < 4) return [];
+  const items = [];
+  for (let i=0;i<10;i++) {
+    const correct = pool[Math.floor(Math.random()*pool.length)];
+    const choices = new Set([correct]);
+    while (choices.size < 4) choices.add(pool[Math.floor(Math.random()*pool.length)]);
+    const arr = Array.from(choices);
+    const showDutch = Math.random() < 0.5;
+    items.push({
+      prompt: showDutch ? correct.nl : correct.en,
+      correct: showDutch ? correct.en : correct.nl,
+      options: shuffle(arr.map(c=> showDutch ? c.en : c.nl))
+    });
+  }
+  return items;
+}
+function startQuiz() {
+  qState = { n:0, score:0, items: makeQuizSet() };
+  updateQuizUI();
+}
+function updateQuizUI() {
+  document.getElementById('qNum').textContent = String(Math.min(qState.n+1, 10));
+  document.getElementById('qScore').textContent = String(qState.score);
+  const prompt = document.getElementById('qPrompt');
+  const choices = document.getElementById('qChoices');
+  choices.innerHTML = '';
+  if (!qState.items.length) { prompt.textContent = 'Add more cards in Deck'; return; }
+  const item = qState.items[qState.n] || qState.items[qState.items.length-1];
+  prompt.textContent = item.prompt;
+  item.options.forEach(opt=>{
+    const b = document.createElement('button');
+    b.className = 'btn';
+    b.textContent = opt;
+    b.onclick = () => {
+      const correct = (opt === item.correct);
+      b.className = 'btn ' + (correct ? 'good' : 'bad');
+      Array.from(choices.children).forEach(ch=> ch.disabled = true);
+      if (correct) qState.score += 1;
+      setTimeout(()=>{
+        qState.n += 1;
+        if (qState.n >= 10) {
+          markActivity('quiz', { c:qState.score, t:10 });
+          renderProgress();
+          qState = { n:0, score:0, items: makeQuizSet() };
+        }
+        updateQuizUI();
+      }, 420);
+    };
+    choices.appendChild(b);
+  });
+}
+document.getElementById('qRestart').onclick = startQuiz;
+
+/* ---------- Lion Run (snake-like) ---------- */
+const G = {
+  cols: 46, rows: 23, // grid; canvas is 920x460 -> 20px per cell
+  cell: 20,
+  speedBase: 140, // ms per tick at 1x
+};
+let lion = null;
+
+function newLionState() {
+  const start = { x: Math.floor(G.cols/3), y: Math.floor(G.rows/2) };
+  return {
+    dir: {x:1, y:0},
+    nextDir: {x:1, y:0},
+    snake: [start, {x:start.x-1,y:start.y}, {x:start.x-2,y:start.y}],
+    food: spawnFood([start]),
+    foods:0,
+    words:0,
+    running:false,
+    speed:1,
+    timer:null,
+    heardToday: new Set(),
+    queue: shuffle(DECK.slice()),
+    lastWord: null,
+  };
+}
+function spawnFood(blocked) {
+  while (true) {
+    const x = Math.floor(Math.random()*G.cols);
+    const y = Math.floor(Math.random()*G.rows);
+    if (!blocked.some(p=>p.x===x && p.y===y)) {
+      const kind = Math.random() < 0.5 ? 'cheese' : 'meat';
+      return {x,y,kind};
+    }
+  }
+}
+
+/* Voice */
+let voices = [];
+function loadVoices() {
+  voices = window.speechSynthesis ? speechSynthesis.getVoices() : [];
+}
+if ('speechSynthesis' in window) {
+  loadVoices();
+  window.speechSynthesis.onvoiceschanged = loadVoices;
+}
+function speakDutch(text) {
+  if (!('speechSynthesis' in window)) return;
+  const u = new SpeechSynthesisUtterance(text);
+  const v = voices.find(v=>/nl|Dutch/i.test(v.lang||v.name)) || voices.find(v=>/en/i.test(v.lang||v.name)) || null;
+  if (v) u.voice = v;
+  u.lang = v?.lang || 'nl-NL';
+  u.rate = 0.95;
+  u.pitch = 1;
+  speechSynthesis.cancel();
+  speechSynthesis.speak(u);
+}
+function nextWord() {
+  if (!lion) return null;
+  // try unseen today
+  for (let i=0;i<lion.queue.length;i++) {
+    const w = lion.queue[i];
+    if (!lion.heardToday.has(w.id)) {
+      lion.queue.splice(i,1);
+      lion.queue.push(w);
+      lion.heardToday.add(w.id);
+      return w;
+    }
+  }
+  // all heard, just pop next
+  const w = lion.queue.shift();
+  lion.queue.push(w);
+  return w;
+}
+function toastWord(w) {
+  const t = document.getElementById('gToast');
+  document.getElementById('wNL').textContent = w.nl;
+  document.getElementById('wEN').textContent = w.en;
+  t.style.display = 'block';
+  clearTimeout(toastWord._t);
+  toastWord._t = setTimeout(()=>{ t.style.display='none'; }, 2800);
+}
+
+/* Canvas draw */
+const cvs = document.getElementById('lionCanvas');
+const ctx = cvs.getContext('2d');
+function drawBoard() {
+  ctx.clearRect(0,0,cvs.width,cvs.height);
+  // subtle grid
+  ctx.fillStyle = '#0e1522';
+  for (let y=0;y<G.rows;y++) {
+    for (let x=0;x<G.cols;x++) {
+      if ((x+y)%2===0) {
+        ctx.fillRect(x*G.cell, y*G.cell, G.cell, G.cell);
+      }
+    }
+  }
+  // food
+  if (lion?.food) drawFood(lion.food);
+  // snake
+  if (lion) drawSnake(lion.snake);
+}
+function drawSnake(parts) {
+  const head = parts[0];
+  // body
+  for (let i=parts.length-1;i>=1;i--) {
+    const p = parts[i];
+    const c1 = 20 + i%5*6;
+    ctx.fillStyle = `rgb(${30+c1}, ${60+c1}, ${100})`;
+    ctx.fillRect(p.x*G.cell+2, p.y*G.cell+2, G.cell-4, G.cell-4);
+  }
+  // head as lion face
+  drawLionHead(head.x, head.y);
+}
+function drawLionHead(x, y) {
+  const px = x*G.cell, py = y*G.cell, s = G.cell;
+  // mane
+  ctx.fillStyle = '#c46b20';
+  ctx.beginPath();
+  ctx.roundRect(px+1, py+1, s-2, s-2, 6);
+  ctx.fill();
+  // face
+  ctx.fillStyle = '#f2c089';
+  ctx.beginPath();
+  ctx.roundRect(px+4, py+4, s-8, s-8, 6);
+  ctx.fill();
+  // eyes
+  ctx.fillStyle = '#231f20';
+  ctx.fillRect(px+7, py+8, 3, 3);
+  ctx.fillRect(px+s-10, py+8, 3, 3);
+  // nose
+  ctx.fillStyle = '#2b2525';
+  ctx.fillRect(px+s/2-2, py+12, 4, 3);
+  // mouth
+  ctx.fillStyle = '#2b2525';
+  ctx.fillRect(px+s/2-5, py+16, 10, 2);
+}
+function drawFood(f) {
+  if (f.kind === 'cheese') drawCheese(f.x, f.y); else drawMeat(f.x, f.y);
+}
+function drawCheese(x,y) {
+  const px=x*G.cell, py=y*G.cell, s=G.cell;
+  ctx.fillStyle='#ffd66e';
+  ctx.beginPath();
+  ctx.moveTo(px+3,py+s-3);
+  ctx.lineTo(px+s-3,py+s-3);
+  ctx.lineTo(px+s-3,py+5);
+  ctx.closePath();
+  ctx.fill();
+  // holes
+  ctx.fillStyle='#e9b94e';
+  ctx.beginPath();
+  ctx.arc(px+s-8, py+10, 3, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath();
+  ctx.arc(px+10, py+s-8, 2.5, 0, Math.PI*2); ctx.fill();
+}
+function drawMeat(x,y) {
+  const px=x*G.cell, py=y*G.cell, s=G.cell;
+  // bone
+  ctx.fillStyle='#fff5e4';
+  ctx.fillRect(px+s-10, py+s/2-2, 8, 4);
+  ctx.beginPath(); ctx.arc(px+s-3, py+s/2, 3, 0, Math.PI*2); ctx.fill();
+  // meat
+  ctx.fillStyle='#d15757';
+  ctx.beginPath();
+  ctx.ellipse(px+9, py+s/2, 8, 10, 0, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle='#8c2f2f';
+  ctx.beginPath();
+  ctx.ellipse(px+7, py+s/2, 4, 6, 0, 0, Math.PI*2); ctx.fill();
+}
+
+function tick() {
+  if (!lion?.running) return;
+  lion.dir = lion.nextDir;
+  const head = lion.snake[0];
+  const nx = head.x + lion.dir.x;
+  const ny = head.y + lion.dir.y;
+  // wrap
+  const hx = (nx + G.cols) % G.cols;
+  const hy = (ny + G.rows) % G.rows;
+  // collide with self
+  if (lion.snake.some(p=>p.x===hx && p.y===hy)) {
+    stopLion();
+    flashToast('Game Over');
+    markActivity('lion', { foods: lion.foods, words: lion.words });
+    renderProgress();
+    return;
+  }
+  lion.snake.unshift({x:hx,y:hy});
+  // eat
+  if (lion.food && lion.food.x===hx && lion.food.y===hy) {
+    lion.foods += 1;
+    document.getElementById('gFoods').textContent = String(lion.foods);
+    // speak new word
+    const w = nextWord();
+    if (w) {
+      lion.words += 1;
+      lion.lastWord = w;
+      document.getElementById('gWords').textContent = String(lion.words);
+      toastWord(w);
+      speakDutch(w.nl);
+    }
+    lion.food = spawnFood(lion.snake);
+    // speed up gently
+    if (lion.foods % 4 === 0) {
+      lion.speed = Math.min(3, lion.speed + 0.2);
+      document.getElementById('gSpeed').textContent = String(Math.round(lion.speed*10)/10);
+      restartTimer();
+    }
+  } else {
+    lion.snake.pop();
+  }
+  document.getElementById('gLen').textContent = String(lion.snake.length);
+  drawBoard();
+}
+function startLion() {
+  if (!lion) lion = newLionState();
+  if (lion.running) return;
+  lion.running = true;
+  restartTimer();
+}
+function stopLion() {
+  lion.running = false;
+  if (lion.timer) { clearInterval(lion.timer); lion.timer=null; }
+}
+function resetLion() {
+  stopLion();
+  lion = newLionState();
+  document.getElementById('gFoods').textContent = '0';
+  document.getElementById('gLen').textContent = String(lion.snake.length);
+  document.getElementById('gWords').textContent = '0';
+  document.getElementById('gSpeed').textContent = '1';
+  drawBoard();
+}
+function restartTimer() {
+  if (lion.timer) clearInterval(lion.timer);
+  const interval = Math.max(40, G.speedBase / lion.speed);
+  lion.timer = setInterval(tick, interval);
+}
+function flashToast(text) {
+  const t = document.getElementById('gToast');
+  document.getElementById('wNL').textContent = text;
+  document.getElementById('wEN').textContent = '';
+  t.style.display = 'block';
+  clearTimeout(flashToast._t);
+  flashToast._t = setTimeout(()=>{ t.style.display='none'; }, 1500);
+}
+
+document.getElementById('gStart').onclick = startLion;
+document.getElementById('gPause').onclick = () => { if (!lion) return; lion.running ? stopLion() : startLion(); };
+document.getElementById('gReset').onclick = resetLion;
+document.addEventListener('keydown', (e)=>{
+  if (!document.getElementById('lion').classList.contains('active')) return;
+  if (!lion) return;
+  if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','p','P','r','R','s','S'].includes(e.key)) e.preventDefault();
+  if (e.key==='ArrowUp' && lion.dir.y!==1) lion.nextDir={x:0,y:-1};
+  if (e.key==='ArrowDown' && lion.dir.y!==-1) lion.nextDir={x:0,y:1};
+  if (e.key==='ArrowLeft' && lion.dir.x!==1) lion.nextDir={x:-1,y:0};
+  if (e.key==='ArrowRight' && lion.dir.x!==-1) lion.nextDir={x:1,y:0};
+  if (e.key==='p' || e.key==='P') { lion.running ? stopLion() : startLion(); }
+  if (e.key==='r' || e.key==='R') { resetLion(); }
+  if (e.key==='s' || e.key==='S') { if (lion.lastWord) speakDutch(lion.lastWord.nl); }
+});
+
+/* ---------- Progress UI ---------- */
+function renderProgress() {
+  const day = todayStr();
+  const d = PROG.days[day] || {reviews:0, correct:0, quizC:0, quizT:0, foods:0, words:0};
+  const acc = d.reviews ? Math.round((d.correct/d.reviews)*100) : 0;
+  document.getElementById('pReviews').textContent = String(d.reviews);
+  document.getElementById('pAccuracy').textContent = `${acc}%`;
+  document.getElementById('pQuiz').textContent = `${d.quizC}/${d.quizT}`;
+  document.getElementById('pFoods').textContent = String(d.foods);
+  document.getElementById('pWords').textContent = String(d.words);
+  document.getElementById('pStreak').textContent = String(PROG.streak || 0);
+  drawChart();
+}
+function drawChart() {
+  const cvs = document.getElementById('pChart');
+  const ctx = cvs.getContext('2d');
+  const days = [];
+  const today = new Date(todayStr());
+  for (let i=13;i>=0;i--) {
+    const d = new Date(today); d.setDate(d.getDate()-i);
+    days.push(d.toISOString().slice(0,10));
+  }
+  const vals = days.map(k => (PROG.days[k]?.reviews ?? 0) + (PROG.days[k]?.foods ?? 0));
+  const w = cvs.width, h = cvs.height, pad = 10;
+  ctx.clearRect(0,0,w,h);
+  ctx.strokeStyle = '#1c2436'; ctx.lineWidth = 1; ctx.beginPath();
+  for (let i=0;i<=7;i++){ const y=h-(i*(h/7)); ctx.moveTo(0,y); ctx.lineTo(w,y); } ctx.stroke();
+  const max = Math.max(5, ...vals);
+  const barW = w / vals.length - 4;
+  vals.forEach((v,i)=>{
+    const x = i * (w/vals.length) + 2;
+    const mh = Math.round((v / max) * (h - pad*2));
+    const y = h - pad - mh;
+    const grad = ctx.createLinearGradient(0,y,0,h);
+    grad.addColorStop(0,'#4aa3ff'); grad.addColorStop(1,'#62e1b7');
+    ctx.fillStyle = grad; ctx.fillRect(x, y, barW, mh);
+  });
+}
+
+/* ---------- Deck UI ---------- */
+function renderDeckTable() {
+  const tbody = document.getElementById('dTable');
+  tbody.innerHTML = '';
+  DECK.forEach(c=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(c.nl)}</td>
+      <td>${escapeHtml(c.en)}</td>
+      <td>${(c.tags||[]).join(', ')}</td>
+      <td><button class="btn tiny" data-del="${c.id}">Del</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+  tbody.querySelectorAll('button[data-del]').forEach(b=>{
+    b.onclick = ()=>{
+      const id = Number(b.getAttribute('data-del'));
+      DECK = DECK.filter(x=>x.id!==id);
+      delete SRS[id];
+      save(KEY.DECK, DECK);
+      save(KEY.SRS, SRS);
+      document.getElementById('dCount').textContent = String(DECK.length);
+      renderDeckTable();
+      buildLearnQueue();
+      startQuiz();
+      resetLion();
+      renderProgress();
+    };
+  });
+  document.getElementById('dCount').textContent = String(DECK.length);
+}
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
+
+document.getElementById('dAdd').onclick = ()=>{
+  const nl = document.getElementById('addNl').value.trim();
+  const en = document.getElementById('addEn').value.trim();
+  const part = document.getElementById('addPart').value.trim();
+  const tags = document.getElementById('addTags').value.split(',').map(s=>s.trim()).filter(Boolean);
+  if (!nl || !en) { flashMsg('dAddMsg','Need NL and EN'); return; }
+  const id = META.nextId++;
+  const card = { id, nl, en, part:part||undefined, tags:tags.length?tags:undefined };
+  DECK.push(card);
+  ensureSrs(id);
+  save(KEY.DECK, DECK);
+  save(KEY.SRS, SRS);
+  save(KEY.META, META);
+  document.getElementById('addNl').value = '';
+  document.getElementById('addEn').value = '';
+  document.getElementById('addPart').value = '';
+  document.getElementById('addTags').value = '';
+  renderDeckTable();
+  buildLearnQueue();
+  startQuiz();
+  resetLion();
+  renderProgress();
+  flashMsg('dAddMsg','Added');
+};
+document.getElementById('dImportBtn').onclick = ()=>{
+  try{
+    const txt = document.getElementById('dImport').value;
+    const arr = JSON.parse(txt);
+    if (!Array.isArray(arr)) throw new Error('bad');
+    arr.forEach(obj=>{
+      if (!obj.nl || !obj.en) return;
+      const id = META.nextId++;
+      const card = { id, nl:String(obj.nl), en:String(obj.en), part:obj.part||undefined, tags:obj.tags||undefined };
+      DECK.push(card);
+      ensureSrs(id);
+    });
+    save(KEY.DECK, DECK);
+    save(KEY.SRS, SRS);
+    save(KEY.META, META);
+    renderDeckTable();
+    buildLearnQueue();
+    startQuiz();
+    resetLion();
+    renderProgress();
+    document.getElementById('dImport').value='';
+  }catch{}
+};
+document.getElementById('dExport').onclick = ()=>{
+  const data = DECK.map(({id, ...rest})=>rest);
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'dutch-deck.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+};
+document.getElementById('dReset').onclick = ()=>{
+  SRS = {};
+  DECK.forEach(c=>ensureSrs(c.id));
+  PROG = { days:{}, last:"", streak:0 };
+  save(KEY.SRS, SRS);
+  save(KEY.PROG, PROG);
+  renderProgress();
+  updateDueBadges();
+  buildLearnQueue();
+  startQuiz();
+  resetLion();
+};
+
+/* ---------- Utils ---------- */
+function flashMsg(id, text){
+  const el = document.getElementById(id);
+  el.textContent = text;
+  setTimeout(()=>{ if (el.textContent===text) el.textContent=''; }, 1200);
+}
+
+/* ---------- Lifecycle ---------- */
+function onTab(tab) {
+  if (tab==='learn') { updateDueBadges(); showCurrentCard(); }
+  if (tab==='quiz') { updateQuizUI(); }
+  if (tab==='lion') { drawBoard(); }
+  if (tab==='progress') { renderProgress(); }
+  if (tab==='deck') { renderDeckTable(); }
+}
+function boot() {
+  save(KEY.DECK, DECK);
+  save(KEY.SRS, SRS);
+  save(KEY.PROG, PROG);
+  save(KEY.META, META);
+  buildLearnQueue();
+  showCurrentCard();
+  startQuiz();
+  resetLion();
+  renderDeckTable();
+  renderProgress();
+}
+boot();
+</script>
+</body>
+</html>
